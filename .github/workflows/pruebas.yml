@@ -1,0 +1,29 @@
+name: Pruebas
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Ejecutar las pruebas
+        run: ./gradlew test --no-daemon
+
+      - name: Guardar el informe de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-de-pruebas
+          path: app/build/reports/tests/test/
+          if-no-files-found: ignore
