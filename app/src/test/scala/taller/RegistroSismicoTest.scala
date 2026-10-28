@@ -66,6 +66,47 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(paresCercanos(registro, 5.0).forall { case (a, b) => a != b })
   }
 
+  // Casos propios del punto 1 -------------------------------------------------
+
+  test("punto 1 propio: fuertes respeta el límite estricto y el orden") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Norte", 4.5, 10),
+      Sismo(Fecha(2026, 1), "Sur", 4.6, 20),
+      Sismo(Fecha(2026, 2), "Norte", 5.0, 30))
+    assert(fuertes(datos, 4.5) == List("Sur", "Norte"))
+  }
+
+  test("punto 1 propio: enRegion conserva el orden y las magnitudes repetidas") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Este", 2.4, 10),
+      Sismo(Fecha(2026, 1), "Oeste", 3.1, 20),
+      Sismo(Fecha(2026, 2), "Este", 2.4, 30))
+    assert(enRegion(datos, "Este") == List(2.4, 2.4))
+  }
+
+  test("punto 1 propio: paresCercanos incluye diferencias exactamente iguales al límite") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "C", 2.0, 10),
+      Sismo(Fecha(2026, 1), "A", 3.0, 20),
+      Sismo(Fecha(2026, 1), "B", 2.5, 30))
+    assert(paresCercanos(datos, 0.5) == List(("C", "B"), ("A", "B")))
+  }
+
+  test("punto 1 propio: paresCercanos devuelve una pareja solo una vez") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Uno", 5.0, 10),
+      Sismo(Fecha(2026, 1), "Dos", 5.1, 20),
+      Sismo(Fecha(2026, 2), "Uno", 5.2, 30),
+      Sismo(Fecha(2026, 2), "Dos", 5.3, 40))
+    assert(paresCercanos(datos, 1.0) == List(("Uno", "Dos")))
+  }
+
+  test("punto 1 propio: las consultas devuelven listas vacías para el registro vacío") {
+    assert(fuertes(vacio, 1.0).isEmpty)
+    assert(enRegion(vacio, "Norte").isEmpty)
+    assert(paresCercanos(vacio, 1.0).isEmpty)
+  }
+
   // Punto 2 -------------------------------------------------------------------
 
   test("porRegion: agrupa los siete sismos en tres regiones") {
@@ -89,6 +130,45 @@ class RegistroSismicoTest extends AnyFunSuite {
 
   test("magnitudMaxima: las regiones ausentes no aparecen") {
     assert(!magnitudMaxima(registro).contains("Amazonas"))
+  }
+
+  // Casos propios del punto 2 -------------------------------------------------
+
+  test("punto 2 propio: porRegion agrupa todos los sismos conservando su orden") {
+    val primero = Sismo(Fecha(2026, 1), "Costa", 2.0, 10)
+    val segundo = Sismo(Fecha(2026, 1), "Sierra", 3.0, 20)
+    val tercero = Sismo(Fecha(2026, 2), "Costa", 4.0, 30)
+    assert(porRegion(List(primero, segundo, tercero)) ==
+      Map("Costa" -> List(primero, tercero), "Sierra" -> List(segundo)))
+  }
+
+  test("punto 2 propio: conteoPorRegion cuenta una región con un solo sismo") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Isla", 3.2, 10),
+      Sismo(Fecha(2026, 2), "Continente", 4.1, 20),
+      Sismo(Fecha(2026, 3), "Continente", 4.3, 30))
+    assert(conteoPorRegion(datos) == Map("Isla" -> 1, "Continente" -> 2))
+  }
+
+  test("punto 2 propio: magnitudMaxima encuentra el máximo entre varios sismos") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Llanura", 6.1, 10),
+      Sismo(Fecha(2026, 2), "Llanura", 3.7, 20),
+      Sismo(Fecha(2026, 3), "Montaña", 4.8, 30))
+    assert(magnitudMaxima(datos) == Map("Llanura" -> 6.1, "Montaña" -> 4.8))
+  }
+
+  test("punto 2 propio: cada función omite regiones no presentes") {
+    val datos = List(Sismo(Fecha(2026, 1), "Centro", 4.2, 10))
+    assert(!porRegion(datos).contains("Sur"))
+    assert(!conteoPorRegion(datos).contains("Sur"))
+    assert(!magnitudMaxima(datos).contains("Sur"))
+  }
+
+  test("punto 2 propio: las tres funciones producen mapas vacíos sin sismos") {
+    assert(porRegion(vacio).isEmpty)
+    assert(conteoPorRegion(vacio).isEmpty)
+    assert(magnitudMaxima(vacio).isEmpty)
   }
 
   // Punto 3 -------------------------------------------------------------------
