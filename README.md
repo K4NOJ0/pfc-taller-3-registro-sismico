@@ -16,9 +16,9 @@ la nota.
 
 | Nombre completo | Código |
 |---|---|
-| | |
-| | |
-| | |
+|Jose Emanuel Cuervo Buitrago|2559905-3743|
+|Sergio Alejandro Quintero Bolivar|2559869-3743|
+|Jhon David Ceballos Yate|2559724-3743|
 | | |
 
 ## Cómo está organizado el proyecto
