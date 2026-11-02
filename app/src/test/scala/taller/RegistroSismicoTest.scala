@@ -66,47 +66,6 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(paresCercanos(registro, 5.0).forall { case (a, b) => a != b })
   }
 
-  // Casos propios del punto 1 -------------------------------------------------
-
-  test("punto 1 propio: fuertes respeta el límite estricto y el orden") {
-    val datos = List(
-      Sismo(Fecha(2026, 1), "Norte", 4.5, 10),
-      Sismo(Fecha(2026, 1), "Sur", 4.6, 20),
-      Sismo(Fecha(2026, 2), "Norte", 5.0, 30))
-    assert(fuertes(datos, 4.5) == List("Sur", "Norte"))
-  }
-
-  test("punto 1 propio: enRegion conserva el orden y las magnitudes repetidas") {
-    val datos = List(
-      Sismo(Fecha(2026, 1), "Este", 2.4, 10),
-      Sismo(Fecha(2026, 1), "Oeste", 3.1, 20),
-      Sismo(Fecha(2026, 2), "Este", 2.4, 30))
-    assert(enRegion(datos, "Este") == List(2.4, 2.4))
-  }
-
-  test("punto 1 propio: paresCercanos incluye diferencias exactamente iguales al límite") {
-    val datos = List(
-      Sismo(Fecha(2026, 1), "C", 2.0, 10),
-      Sismo(Fecha(2026, 1), "A", 3.0, 20),
-      Sismo(Fecha(2026, 1), "B", 2.5, 30))
-    assert(paresCercanos(datos, 0.5) == List(("C", "B"), ("A", "B")))
-  }
-
-  test("punto 1 propio: paresCercanos devuelve una pareja solo una vez") {
-    val datos = List(
-      Sismo(Fecha(2026, 1), "Uno", 5.0, 10),
-      Sismo(Fecha(2026, 1), "Dos", 5.1, 20),
-      Sismo(Fecha(2026, 2), "Uno", 5.2, 30),
-      Sismo(Fecha(2026, 2), "Dos", 5.3, 40))
-    assert(paresCercanos(datos, 1.0) == List(("Uno", "Dos")))
-  }
-
-  test("punto 1 propio: las consultas devuelven listas vacías para el registro vacío") {
-    assert(fuertes(vacio, 1.0).isEmpty)
-    assert(enRegion(vacio, "Norte").isEmpty)
-    assert(paresCercanos(vacio, 1.0).isEmpty)
-  }
-
   // Punto 2 -------------------------------------------------------------------
 
   test("porRegion: agrupa los siete sismos en tres regiones") {
@@ -130,45 +89,6 @@ class RegistroSismicoTest extends AnyFunSuite {
 
   test("magnitudMaxima: las regiones ausentes no aparecen") {
     assert(!magnitudMaxima(registro).contains("Amazonas"))
-  }
-
-  // Casos propios del punto 2 -------------------------------------------------
-
-  test("punto 2 propio: porRegion agrupa todos los sismos conservando su orden") {
-    val primero = Sismo(Fecha(2026, 1), "Costa", 2.0, 10)
-    val segundo = Sismo(Fecha(2026, 1), "Sierra", 3.0, 20)
-    val tercero = Sismo(Fecha(2026, 2), "Costa", 4.0, 30)
-    assert(porRegion(List(primero, segundo, tercero)) ==
-      Map("Costa" -> List(primero, tercero), "Sierra" -> List(segundo)))
-  }
-
-  test("punto 2 propio: conteoPorRegion cuenta una región con un solo sismo") {
-    val datos = List(
-      Sismo(Fecha(2026, 1), "Isla", 3.2, 10),
-      Sismo(Fecha(2026, 2), "Continente", 4.1, 20),
-      Sismo(Fecha(2026, 3), "Continente", 4.3, 30))
-    assert(conteoPorRegion(datos) == Map("Isla" -> 1, "Continente" -> 2))
-  }
-
-  test("punto 2 propio: magnitudMaxima encuentra el máximo entre varios sismos") {
-    val datos = List(
-      Sismo(Fecha(2026, 1), "Llanura", 6.1, 10),
-      Sismo(Fecha(2026, 2), "Llanura", 3.7, 20),
-      Sismo(Fecha(2026, 3), "Montaña", 4.8, 30))
-    assert(magnitudMaxima(datos) == Map("Llanura" -> 6.1, "Montaña" -> 4.8))
-  }
-
-  test("punto 2 propio: cada función omite regiones no presentes") {
-    val datos = List(Sismo(Fecha(2026, 1), "Centro", 4.2, 10))
-    assert(!porRegion(datos).contains("Sur"))
-    assert(!conteoPorRegion(datos).contains("Sur"))
-    assert(!magnitudMaxima(datos).contains("Sur"))
-  }
-
-  test("punto 2 propio: las tres funciones producen mapas vacíos sin sismos") {
-    assert(porRegion(vacio).isEmpty)
-    assert(conteoPorRegion(vacio).isEmpty)
-    assert(magnitudMaxima(vacio).isEmpty)
   }
 
   // Punto 3 -------------------------------------------------------------------
@@ -243,8 +163,8 @@ class RegistroSismicoTest extends AnyFunSuite {
   test("informe: el resumen de las tres regiones") {
     assert(informe(registro, 3.0) ==
       Map("Valle" -> Resumen(3, 5.3, 3),
-          "Santander" -> Resumen(2, 5.1, 3),
-          "Choco" -> Resumen(2, 6.0, 4)))
+        "Santander" -> Resumen(2, 5.1, 3),
+        "Choco" -> Resumen(2, 6.0, 4)))
   }
 
   test("informe: el registro vacío da el mapa vacío") {
@@ -264,5 +184,90 @@ class RegistroSismicoTest extends AnyFunSuite {
   test("informe: las réplicas coinciden con replicasSensibles del más fuerte") {
     assert(informe(registro, 3.0)("Choco").replicas ==
       replicasSensibles(6.0, 3.0).length)
+  }
+
+  // Pruebas adicionales de los puntos 1 y 2 ---------------------------------
+
+  test("fuertes conserva el orden y las regiones repetidas") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Norte", 4.1, 10),
+      Sismo(Fecha(2026, 1), "Sur", 5.8, 20),
+      Sismo(Fecha(2026, 2), "Norte", 6.2, 30))
+    assert(fuertes(datos, 4.0) == List("Norte", "Sur", "Norte"))
+  }
+
+  test("enRegion mantiene el orden de registros intercalados") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Delta", 3.4, 10),
+      Sismo(Fecha(2026, 1), "Eco", 4.0, 20),
+      Sismo(Fecha(2026, 2), "Delta", 5.7, 30),
+      Sismo(Fecha(2026, 2), "Delta", 2.9, 40))
+    assert(enRegion(datos, "Delta") == List(3.4, 5.7, 2.9))
+  }
+
+  test("paresCercanos conserva el orden de primera aparición") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "C", 7.0, 10),
+      Sismo(Fecha(2026, 1), "A", 2.0, 20),
+      Sismo(Fecha(2026, 2), "B", 7.1, 30),
+      Sismo(Fecha(2026, 2), "A", 7.2, 40))
+    assert(paresCercanos(datos, 0.2) == List(("C", "A"), ("C", "B"), ("A", "B")))
+  }
+
+  test("paresCercanos retorna la pareja una sola vez") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "A", 4.0, 10),
+      Sismo(Fecha(2026, 1), "B", 4.1, 20),
+      Sismo(Fecha(2026, 2), "A", 4.2, 30),
+      Sismo(Fecha(2026, 2), "B", 4.3, 40))
+    assert(paresCercanos(datos, 0.3) == List(("A", "B")))
+  }
+
+  test("regiones con mayúsculas distintas se comparan por nombre exacto") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Norte", 3.3, 10),
+      Sismo(Fecha(2026, 1), "norte", 3.4, 20))
+    assert(paresCercanos(datos, 0.2) == List(("Norte", "norte")))
+  }
+
+  test("porRegion mantiene los sismos originales por región") {
+    val primero = Sismo(Fecha(2026, 1), "Bosque", 3.3, 10)
+    val segundo = Sismo(Fecha(2026, 1), "Lago", 5.2, 20)
+    val tercero = Sismo(Fecha(2026, 2), "Bosque", 4.4, 30)
+    assert(porRegion(List(primero, segundo, tercero)) ==
+      Map("Bosque" -> List(primero, tercero), "Lago" -> List(segundo)))
+  }
+
+  test("porRegion separa regiones que solo difieren en mayúsculas") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Norte", 2.0, 10),
+      Sismo(Fecha(2026, 1), "norte", 3.0, 20))
+    assert(porRegion(datos).keySet == Set("Norte", "norte"))
+  }
+
+  test("conteoPorRegion cuenta cantidades diferentes") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Cordillera", 2.0, 10),
+      Sismo(Fecha(2026, 1), "Costa", 3.0, 20),
+      Sismo(Fecha(2026, 2), "Cordillera", 4.0, 30),
+      Sismo(Fecha(2026, 2), "Cordillera", 5.0, 40))
+    assert(conteoPorRegion(datos) == Map("Cordillera" -> 3, "Costa" -> 1))
+  }
+
+  test("conteoPorRegion distingue mayúsculas en las regiones") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Sur", 2.0, 10),
+      Sismo(Fecha(2026, 1), "sur", 3.0, 20),
+      Sismo(Fecha(2026, 2), "Sur", 4.0, 30))
+    assert(conteoPorRegion(datos) == Map("Sur" -> 2, "sur" -> 1))
+  }
+
+  test("magnitudMaxima encuentra el máximo aunque no sea el último") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Altiplano", 6.0, 10),
+      Sismo(Fecha(2026, 1), "Costa", 5.0, 20),
+      Sismo(Fecha(2026, 2), "Altiplano", 3.0, 30),
+      Sismo(Fecha(2026, 2), "Costa", 7.0, 40))
+    assert(magnitudMaxima(datos) == Map("Altiplano" -> 6.0, "Costa" -> 7.0))
   }
 }
