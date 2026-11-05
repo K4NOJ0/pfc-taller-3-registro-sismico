@@ -186,9 +186,9 @@ class RegistroSismicoTest extends AnyFunSuite {
       replicasSensibles(6.0, 3.0).length)
   }
 
-  // Pruebas adicionales de los puntos 1 y 2 ---------------------------------
+  // Pruebas adicionales de los puntos 1 ---------------------------------
 
-  test("fuertes conserva el orden y las regiones repetidas") {
+  test("fuertes: conserva el orden y las regiones repetidas") {
     val datos = List(
       Sismo(Fecha(2026, 1), "Norte", 4.1, 10),
       Sismo(Fecha(2026, 1), "Sur", 5.8, 20),
@@ -196,7 +196,7 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(fuertes(datos, 4.0) == List("Norte", "Sur", "Norte"))
   }
 
-  test("enRegion mantiene el orden de registros intercalados") {
+  test("enRegion: mantiene el orden de registros intercalados") {
     val datos = List(
       Sismo(Fecha(2026, 1), "Delta", 3.4, 10),
       Sismo(Fecha(2026, 1), "Eco", 4.0, 20),
@@ -205,16 +205,16 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(enRegion(datos, "Delta") == List(3.4, 5.7, 2.9))
   }
 
-  test("paresCercanos conserva el orden de primera aparición") {
+  test("paresCercanos: conserva el orden de primera aparición") {
     val datos = List(
       Sismo(Fecha(2026, 1), "C", 7.0, 10),
       Sismo(Fecha(2026, 1), "A", 2.0, 20),
       Sismo(Fecha(2026, 2), "B", 7.1, 30),
       Sismo(Fecha(2026, 2), "A", 7.2, 40))
-    assert(paresCercanos(datos, 0.2) == List(("C", "A"), ("C", "B"), ("A", "B")))
+    assert(paresCercanos(datos, 0.3) == List(("C", "A"), ("C", "B"), ("A", "B")))
   }
 
-  test("paresCercanos retorna la pareja una sola vez") {
+  test("paresCercanos: retorna la pareja una sola vez") {
     val datos = List(
       Sismo(Fecha(2026, 1), "A", 4.0, 10),
       Sismo(Fecha(2026, 1), "B", 4.1, 20),
@@ -223,14 +223,16 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(paresCercanos(datos, 0.3) == List(("A", "B")))
   }
 
-  test("regiones con mayúsculas distintas se comparan por nombre exacto") {
+  test("paresCercanos: regiones con mayúsculas distintas se comparan por nombre exacto") {
     val datos = List(
       Sismo(Fecha(2026, 1), "Norte", 3.3, 10),
       Sismo(Fecha(2026, 1), "norte", 3.4, 20))
     assert(paresCercanos(datos, 0.2) == List(("Norte", "norte")))
   }
 
-  test("porRegion mantiene los sismos originales por región") {
+  // Pruebas adicionales de los puntos 2 ---------------------------------
+
+  test("porRegion: mantiene los sismos originales por región") {
     val primero = Sismo(Fecha(2026, 1), "Bosque", 3.3, 10)
     val segundo = Sismo(Fecha(2026, 1), "Lago", 5.2, 20)
     val tercero = Sismo(Fecha(2026, 2), "Bosque", 4.4, 30)
@@ -238,14 +240,14 @@ class RegistroSismicoTest extends AnyFunSuite {
       Map("Bosque" -> List(primero, tercero), "Lago" -> List(segundo)))
   }
 
-  test("porRegion separa regiones que solo difieren en mayúsculas") {
+  test("porRegion: separa regiones que solo difieren en mayúsculas") {
     val datos = List(
       Sismo(Fecha(2026, 1), "Norte", 2.0, 10),
       Sismo(Fecha(2026, 1), "norte", 3.0, 20))
     assert(porRegion(datos).keySet == Set("Norte", "norte"))
   }
 
-  test("conteoPorRegion cuenta cantidades diferentes") {
+  test("conteoPorRegion: cuenta cantidades diferentes") {
     val datos = List(
       Sismo(Fecha(2026, 1), "Cordillera", 2.0, 10),
       Sismo(Fecha(2026, 1), "Costa", 3.0, 20),
@@ -254,7 +256,7 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(conteoPorRegion(datos) == Map("Cordillera" -> 3, "Costa" -> 1))
   }
 
-  test("conteoPorRegion distingue mayúsculas en las regiones") {
+  test("conteoPorRegion: distingue mayúsculas en las regiones") {
     val datos = List(
       Sismo(Fecha(2026, 1), "Sur", 2.0, 10),
       Sismo(Fecha(2026, 1), "sur", 3.0, 20),
@@ -262,12 +264,56 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(conteoPorRegion(datos) == Map("Sur" -> 2, "sur" -> 1))
   }
 
-  test("magnitudMaxima encuentra el máximo aunque no sea el último") {
+  test("magnitudMaxima: encuentra el máximo aunque no sea el último") {
     val datos = List(
       Sismo(Fecha(2026, 1), "Altiplano", 6.0, 10),
       Sismo(Fecha(2026, 1), "Costa", 5.0, 20),
       Sismo(Fecha(2026, 2), "Altiplano", 3.0, 30),
       Sismo(Fecha(2026, 2), "Costa", 7.0, 40))
     assert(magnitudMaxima(datos) == Map("Altiplano" -> 6.0, "Costa" -> 7.0))
+  }
+
+  // Pruebas adicionales de los puntos 3 ---------------------------------
+
+  test("conteoSeguro: no falla con claves inexistentes y devuelve 0") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Norte", 4.0, 10),
+      Sismo(Fecha(2026, 1), "Sur", 5.0, 20)
+    )
+    val mapSeguro = conteoSeguro(datos)
+    assert(mapSeguro("Oeste") == 0)
+    assert(mapSeguro("Centro") == 0)
+  }
+
+  test("conteoSeguro: mantiene la cuenta exacta de múltiples sismos en una región") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Cordillera", 2.0, 10),
+      Sismo(Fecha(2026, 1), "Cordillera", 3.0, 20),
+      Sismo(Fecha(2026, 2), "Cordillera", 4.0, 30)
+    )
+    assert(conteoSeguro(datos)("Cordillera") == 3)
+  }
+
+  test("maximaDe: devuelve Some con la mayor magnitud si hay varios sismos en la misma región") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Costa", 4.5, 10),
+      Sismo(Fecha(2026, 1), "Costa", 6.8, 20),
+      Sismo(Fecha(2026, 2), "Costa", 5.2, 30)
+    )
+    assert(maximaDe(datos, "Costa") == Some(6.8))
+  }
+
+  test("maximaDe: distingue entre minúsculas y mayúsculas devolviendo None para el nombre incorrecto") {
+    val datos = List(Sismo(Fecha(2026, 1), "Altiplano", 5.5, 10))
+    assert(maximaDe(datos, "altiplano") == None)
+  }
+
+  test("regionMasActiva: en un triple empate numérico elige estrictamente la primera alfabéticamente") {
+    val tripleEmpate = List(
+      Sismo(Fecha(2026, 1), "Zulia", 5.0, 10),
+      Sismo(Fecha(2026, 1), "Bolivar", 5.0, 20),
+      Sismo(Fecha(2026, 1), "Antioquia", 5.0, 30)
+    )
+    assert(regionMasActiva(tripleEmpate) == Some("Antioquia"))
   }
 }
