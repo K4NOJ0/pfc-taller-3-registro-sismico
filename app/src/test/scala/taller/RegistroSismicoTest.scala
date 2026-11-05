@@ -186,7 +186,7 @@ class RegistroSismicoTest extends AnyFunSuite {
       replicasSensibles(6.0, 3.0).length)
   }
 
-  // Pruebas adicionales de los puntos 1 ---------------------------------
+  // Pruebas adicionales del punto 1 ---------------------------------
 
   test("fuertes: conserva el orden y las regiones repetidas") {
     val datos = List(
@@ -230,7 +230,7 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(paresCercanos(datos, 0.2) == List(("Norte", "norte")))
   }
 
-  // Pruebas adicionales de los puntos 2 ---------------------------------
+  // Pruebas adicionales del punto 2 ---------------------------------
 
   test("porRegion: mantiene los sismos originales por región") {
     val primero = Sismo(Fecha(2026, 1), "Bosque", 3.3, 10)
@@ -273,7 +273,7 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(magnitudMaxima(datos) == Map("Altiplano" -> 6.0, "Costa" -> 7.0))
   }
 
-  // Pruebas adicionales de los puntos 3 ---------------------------------
+  // Pruebas adicionales del punto 3 ---------------------------------
 
   test("conteoSeguro: no falla con claves inexistentes y devuelve 0") {
     val datos = List(
@@ -315,5 +315,29 @@ class RegistroSismicoTest extends AnyFunSuite {
       Sismo(Fecha(2026, 1), "Antioquia", 5.0, 30)
     )
     assert(regionMasActiva(tripleEmpate) == Some("Antioquia"))
+  }
+
+  // Pruebas adicionales del punto 4 ---------------------------------
+
+  test("replicas: genera los primeros elementos correctamente y con redondeo") {
+    val seq = replicas(10.0).take(3).toList
+    assert(seq == List(10.0, 8.0, 6.4))
+  }
+
+  test("replicasSensibles: retorna lista vacia si la magnitud inicial no supera el minimo") {
+    assert(replicasSensibles(2.0, 3.0).isEmpty)
+    assert(replicasSensibles(3.0, 3.0).isEmpty)
+  }
+
+  test("replicasSensibles: genera la secuencia correcta hasta antes de caer al minimo") {
+    assert(replicasSensibles(7.0, 3.5) == List(7.0, 5.6, 4.48, 3.58))
+  }
+
+  test("replicasSensibles: incluye únicamente el primer elemento si la segunda réplica no supera el mínimo") {
+    assert(replicasSensibles(6.0, 4.8) == List(6.0))
+  }
+
+  test("replicasSensibles: redondea adecuadamente a dos decimales en secuencias mas largas") {
+    assert(replicasSensibles(10.0, 4.0) == List(10.0, 8.0, 6.4, 5.12, 4.1))
   }
 }
