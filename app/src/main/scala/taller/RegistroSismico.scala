@@ -11,18 +11,23 @@ class RegistroSismico {
   type Registro = List[Sismo]
 
   // Punto 1: consultas con expresiones for --------------------------------------
-
   /** Las regiones de los sismos que superan el umbral, en orden y con repetidos. */
   def fuertes(r: Registro, umbral: Double): List[String] =
-    for (sismo <- r if sismo.magnitud > umbral) yield sismo.region
+    for {
+      sismo <- r
+         if sismo.magnitud > umbral
+         } yield sismo.region
 
   /** Las magnitudes registradas en una región. */
   def enRegion(r: Registro, region: String): List[Double] =
-    for (sismo <- r if sismo.region == region) yield sismo.magnitud
+    for {
+      sismo <- r
+      if sismo.region == region
+    } yield sismo.magnitud
 
   /** Parejas de regiones distintas con algún sismo de magnitudes cercanas. */
   def paresCercanos(r: Registro, dif: Double): List[(String, String)] = {
-    val regiones = (for (sismo <- r) yield sismo.region).distinct
+    val regiones = (for {sismo <- r} yield sismo.region).distinct
     (for {
       (region1, indice1) <- regiones.zipWithIndex
       (region2, indice2) <- regiones.zipWithIndex
@@ -72,18 +77,27 @@ class RegistroSismico {
 
   /** La secuencia infinita que empieza en la magnitud y multiplica por 0.8. */
   def replicas(magnitud: Double): LazyList[Double] =
-    magnitud #:: replicas(magnitud * 0.8)
-      .map(redondear)
+    magnitud #:: replicas(magnitud * 0.8).map(redondear)
 
   /** Las réplicas mientras superen el mínimo, incluida la primera. */
   def replicasSensibles(magnitud: Double, minimo: Double): List[Double] =
-    replicas(magnitud)
-      .takeWhile(_ > minimo)
-      .map(redondear)
-      .toList
+    replicas(magnitud).takeWhile(_ > minimo).map(redondear).toList
 
   // Punto 5: informe combinado --------------------------------------------------
 
   /** Conteo, magnitud máxima y réplicas esperadas del sismo más fuerte, por región. */
-  def informe(r: Registro, minimo: Double): Map[String, Resumen] = ???
+  def informe(r: Registro, minimo: Double): Map[String, Resumen] = {
+    val grupos = porRegion(r)
+
+    val resultado = for {
+      (region, listaSismos) <- grupos
+    } yield {
+      val cantidad = listaSismos.length
+      val maxima = listaSismos.map(_.magnitud).max
+      val totalReplicas = replicasSensibles(maxima,minimo).length
+      region -> Resumen(cantidad, maxima, totalReplicas)
+    }
+    resultado
+  }
+
 }

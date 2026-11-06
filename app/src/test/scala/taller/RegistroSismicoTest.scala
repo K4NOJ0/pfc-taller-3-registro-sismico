@@ -340,4 +340,29 @@ class RegistroSismicoTest extends AnyFunSuite {
   test("replicasSensibles: redondea adecuadamente a dos decimales en secuencias mas largas") {
     assert(replicasSensibles(10.0, 4.0) == List(10.0, 8.0, 6.4, 5.12, 4.1))
   }
+  //pruebas adicionales del punto 5 -------------------
+  test("informe: el mapa devuelto tiene exactamente las claves de las regiones registradas") {
+    val regionesEsperadas = registro.map(_.region).distinct.toSet
+    val resultado = informe(registro, 3.0)
+    assert(resultado.keySet == regionesEsperadas)
+  }
+
+  test("informe: los datos del resumen son exactos para una región específica evaluando todo el objeto") {
+    val resultado = informe(registro, 3.0)
+    val replicasEsperadas = replicasSensibles(5.3, 3.0).length
+    assert(resultado("Valle") == Resumen(3, 5.3, replicasEsperadas))
+  }
+
+  test("informe: el diccionario contiene exactamente las regiones esperadas") {
+    assert(informe(registro, 3.0).keySet == Set("Valle", "Santander", "Choco"))
+  }
+
+  test("informe: genera el objeto Resumen exacto para la región Choco") {
+    assert(informe(registro, 3.0)("Choco") == Resumen(2, 6.0, 4))
+  }
+
+  test("informe: los datos básicos (sismos y máxima) son correctos para Santander") {
+    assert(informe(registro, 3.0)("Santander").sismos == 2)
+    assert(informe(registro, 3.0)("Santander").maxima == 5.1)
+  }
 }
