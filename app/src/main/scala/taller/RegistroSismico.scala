@@ -27,7 +27,9 @@ class RegistroSismico {
 
   /** Parejas de regiones distintas con algún sismo de magnitudes cercanas. */
   def paresCercanos(r: Registro, dif: Double): List[(String, String)] = {
-    val regiones = (for {sismo <- r} yield sismo.region).distinct
+    val regiones = (for {
+      sismo <- r
+    } yield sismo.region).distinct
     (for {
       (region1, indice1) <- regiones.zipWithIndex
       (region2, indice2) <- regiones.zipWithIndex
